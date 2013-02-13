@@ -3,4 +3,4 @@
 Testing
 =======
 
-Tests expect single Elliptics node running on 127.0.0.1:1025 containing groups 1 and 2.
+Tests expect Elliptics cluster with groups 1 and 2. One node should be running on 127.0.0.1:1025.
