@@ -77,23 +77,6 @@ func (s *Session) Write(key *Key, b []byte) (err error) {
 	return
 }
 
-/*
-func (s *Session) WriteCAS(key *Key, oldCheckSum CheckSum, b []byte) (err error) {
-	io_attr := C.struct_dnet_io_attr{id: key.id.id, _type: key.id._type, size: C.uint64_t(len(b)), flags: C.DNET_IO_FLAGS_COMPARE_AND_SWAP}
-	io_attr.parent = *(*[64]C.uint8_t)(unsafe.Pointer(&oldCheckSum[0]))
-	io_control := C.struct_dnet_io_control{id: key.id, io: io_attr, data: unsafe.Pointer(&b[0]), fd: -1}
-
-	var result unsafe.Pointer
-	size := C.dnet_write_data_wait(s.session, &io_control, &result)
-	err = Error(size)
-	if err == nil {
-		C.free(result)
-	}
-
-	return
-}
-*/
-
 // Remove object from Elliptics by key. Session's groups are ingored, key's group is used.
 func (s *Session) Remove(key *Key) (err error) {
 	var cflags C.uint64_t

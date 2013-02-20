@@ -18,13 +18,3 @@
 #if DNET_CSUM_SIZE != 64
 #   error "This will not work."
 #endif
-
-/*
-struct es3_write_result {
-    struct dnet_addr *addr;
-    struct dnet_cmd *cmd;
-    struct dnet_addr_attr *a;
-};
-
-int dnet_write_data_wait_es3(struct dnet_session *s, struct dnet_io_control *ctl, struct es3_write_result **result);
-*/
