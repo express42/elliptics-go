@@ -42,7 +42,7 @@ func (n *Node) Delete() {
 
 // Calls dnet_add_state.
 func (n *Node) Connect(host string, port int, flags ...ConnectFlags) (err error) {
-	fl := 0
+  var fl int
 	for _, f := range flags {
 		fl |= int(f)
 	}
