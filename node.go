@@ -21,12 +21,17 @@ type ConnectFlags int
 
 const (
 	DontDownloadRoutes ConnectFlags = C.DNET_CFG_NO_ROUTE_LIST
+
+	WaitTimeout = 30
 )
 
 func NewNode() (node *Node) {
 	logger := C.log_create(C.DNET_LOG_DEBUG)
 
-	config := C.struct_dnet_config{sock_type: C.SOCK_STREAM, proto: C.IPPROTO_TCP, family: C.AF_INET}
+	config := C.struct_dnet_config{
+		sock_type: C.SOCK_STREAM, proto: C.IPPROTO_TCP, family: C.AF_INET,
+		wait_timeout: WaitTimeout,
+	}
 	config.log = &logger
 
 	node = &Node{config: config}
@@ -42,7 +47,10 @@ func (n *Node) Delete() {
 
 // Calls dnet_add_state.
 func (n *Node) Connect(host string, port uint16, flags ...ConnectFlags) (err error) {
-	config := C.struct_dnet_config{sock_type: C.SOCK_STREAM, proto: C.IPPROTO_TCP, family: C.AF_INET}
+	config := C.struct_dnet_config{
+		sock_type: C.SOCK_STREAM, proto: C.IPPROTO_TCP, family: C.AF_INET,
+		wait_timeout: WaitTimeout,
+	}
 	for _, f := range flags {
 		config.flags |= C.int(f)
 	}
