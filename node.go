@@ -6,11 +6,7 @@ package elliptics
 #include "log.h"
 */
 import "C"
-
-import (
-	"fmt"
-	"unsafe"
-)
+import "unsafe"
 
 type Node struct {
 	config C.struct_dnet_config
@@ -29,7 +25,7 @@ func NewNode() (node *Node) {
 	logger := C.log_create(C.DNET_LOG_DEBUG)
 
 	config := C.struct_dnet_config{
-		sock_type: C.SOCK_STREAM, proto: C.IPPROTO_TCP, family: C.AF_INET,
+		family: C.AF_INET,
 		wait_timeout: WaitTimeout,
 	}
 	config.log = &logger
@@ -47,18 +43,16 @@ func (n *Node) Delete() {
 
 // Calls dnet_add_state.
 func (n *Node) Connect(host string, port uint16, flags ...ConnectFlags) (err error) {
-	config := C.struct_dnet_config{
-		sock_type: C.SOCK_STREAM, proto: C.IPPROTO_TCP, family: C.AF_INET,
-		wait_timeout: WaitTimeout,
-	}
+  var fl int
 	for _, f := range flags {
-		config.flags |= C.int(f)
+		fl |= int(f)
 	}
 
-	h := []byte(host)
-	p := []byte(fmt.Sprintf("%d", port))
-	copy(config.addr[:], *(*[]C.char)(unsafe.Pointer(&h)))
-	copy(config.port[:], *(*[]C.char)(unsafe.Pointer(&p)))
-	err = Error(C.dnet_add_state(n.node, &config))
+	h := C.CString(host)
+	defer C.free(unsafe.Pointer(h))
+	p := C.int(port)
+	family := C.int(C.AF_INET)
+
+	err = Error(C.dnet_add_state(n.node, h, p, family, C.int(fl)))
 	return
 }
