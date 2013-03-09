@@ -48,6 +48,7 @@ func (n *Node) Connect(host string, port uint16, flags ...ConnectFlags) (err err
 	}
 
 	h := C.CString(host)
+	defer C.free(unsafe.Pointer(h))
 	p := C.int(port)
 	family := C.int(C.AF_INET)
 
