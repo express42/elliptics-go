@@ -6,6 +6,7 @@ package elliptics
 #include "log.h"
 */
 import "C"
+import "unsafe"
 
 type Node struct {
 	config C.struct_dnet_config
