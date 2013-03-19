@@ -8,6 +8,7 @@ package elliptics
 import "C"
 
 import (
+	"time"
 	"unsafe"
 )
 
@@ -20,14 +21,12 @@ type ConnectFlags int
 
 const (
 	DontDownloadRoutes ConnectFlags = C.DNET_CFG_NO_ROUTE_LIST
-
-	WaitTimeout = 30
 )
 
-func NewNode() (node *Node) {
+func NewNode(timeout time.Duration) (node *Node) {
 	logger := C.log_create(C.DNET_LOG_DEBUG)
 
-	config := C.struct_dnet_config{family: C.AF_INET, wait_timeout: WaitTimeout}
+	config := C.struct_dnet_config{family: C.AF_INET, wait_timeout: C.uint(timeout.Seconds())}
 	config.log = &logger
 
 	node = &Node{config: config}

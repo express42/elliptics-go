@@ -17,6 +17,10 @@ type E struct {
 
 var _ = Suite(&E{})
 
+var (
+	timeout = 5 * time.Second
+)
+
 func (e *E) SetUpTest(c *C) {
 	t := time.Now().UnixNano()
 	e.key = fmt.Sprintln(t)
@@ -24,7 +28,7 @@ func (e *E) SetUpTest(c *C) {
 }
 
 func (e *E) TestReadWriteRemove(c *C) {
-	node := NewNode()
+	node := NewNode(timeout)
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1025)
 
@@ -51,7 +55,7 @@ func (e *E) TestReadWriteRemove(c *C) {
 }
 
 func (e *E) TestBadConnect(c *C) {
-	node := NewNode()
+	node := NewNode(timeout)
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1024)
 
@@ -72,7 +76,7 @@ func (e *E) TestBadConnect(c *C) {
 }
 
 func (e *E) TestWriteEmpty(c *C) {
-	node := NewNode()
+	node := NewNode(timeout)
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1025)
 
