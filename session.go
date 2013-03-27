@@ -15,24 +15,7 @@ import (
 
 var (
 	readOffset = unsafe.Sizeof(C.struct_dnet_io_attr{})
-
-	cSessions                 int64
-	cReads, cWrites, cDeletes uint64
 )
-
-type Stats struct {
-	Sessions               int64
-	Reads, Writes, Deletes uint64
-}
-
-func (n *Node) Stats() *Stats {
-	return &Stats{
-		Sessions: atomic.LoadInt64(&cSessions),
-		Reads:    atomic.LoadUint64(&cReads),
-		Writes:   atomic.LoadUint64(&cWrites),
-		Deletes:  atomic.LoadUint64(&cDeletes),
-	}
-}
 
 type Session struct {
 	Node    *Node
