@@ -32,25 +32,25 @@ func (e *E) TestReadWriteRemove(c *C) {
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1025)
 
-	session12, err := node.NewSession([]uint32{1, 2})
+	session, err := node.NewSession([]uint32{1})
 	c.Assert(err, IsNil)
-	defer session12.Delete()
+	defer session.Delete()
 
 	k := NewKey(e.key)
-	err = session12.Write(k, e.data)
+	err = session.Write(k, e.data)
 	c.Assert(err, IsNil)
 
-	data12, err := session12.Read(k)
+	data12, err := session.Read(k)
 	c.Assert(err, IsNil)
 	c.Assert(data12, DeepEquals, e.data)
 
-	err = session12.Remove(k)
+	err = session.Remove(k)
 	c.Assert(err, IsNil)
 
-	err = session12.Remove(k)
+	err = session.Remove(k)
 	c.Assert(err, Equals, syscall.ENOENT)
 
-	_, err = session12.Read(k)
+	_, err = session.Read(k)
 	c.Assert(err, Equals, syscall.ENOENT)
 }
 
@@ -59,19 +59,19 @@ func (e *E) TestBadConnect(c *C) {
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1024)
 
-	session12, err := node.NewSession([]uint32{1, 2})
+	session, err := node.NewSession([]uint32{1})
 	c.Assert(err, IsNil)
-	defer session12.Delete()
+	defer session.Delete()
 
 	k := NewKey(e.key)
-	err = session12.Write(k, e.data)
+	err = session.Write(k, e.data)
 	c.Assert(err, Equals, syscall.ENOENT)
 
-	data1, err := session12.Read(k)
+	data1, err := session.Read(k)
 	c.Assert(err, Equals, syscall.ENOENT)
 	c.Assert(len(data1), Equals, 0)
 
-	err = session12.Remove(k)
+	err = session.Remove(k)
 	c.Assert(err, IsNil)
 }
 
@@ -80,17 +80,17 @@ func (e *E) TestWriteEmpty(c *C) {
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1025)
 
-	session12, err := node.NewSession([]uint32{1, 2})
+	session, err := node.NewSession([]uint32{1})
 	c.Assert(err, IsNil)
-	defer session12.Delete()
+	defer session.Delete()
 
 	k := NewKey(e.key)
 	var b []byte
-	err = session12.Write(k, b)
+	err = session.Write(k, b)
 	c.Check(err, Not(Equals), nil)
 	c.Check(err, Not(Equals), syscall.ENOENT)
 
-	err = session12.Write(k, []byte{})
+	err = session.Write(k, []byte{})
 	c.Check(err, Not(Equals), nil)
 	c.Check(err, Not(Equals), syscall.ENOENT)
 }
