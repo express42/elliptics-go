@@ -47,10 +47,13 @@ func (s *Session) Delete() {
 }
 
 // Read object from Elliptics by key. Session's groups are used (somehow), key's group is ignored.
-func (s *Session) Read(key *Key) (b []byte, err error) {
+func (s *Session) Read(key *Key, offset uint, size uint) (b []byte, err error) {
 	atomic.AddUint64(&cReads, 1)
 
-	io_attr := C.struct_dnet_io_attr{parent: key.id.id, id: key.id.id, _type: key.id._type}
+	io_attr := C.struct_dnet_io_attr{
+		parent: key.id.id, id: key.id.id, _type: key.id._type,
+		offset: C.uint64_t(offset), size: C.uint64_t(size),
+	}
 
 	var cflags C.uint64_t
 	var errp C.int
