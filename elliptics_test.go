@@ -92,12 +92,10 @@ func (e *E) TestWriteEmpty(c *C) {
 	k := NewKey(e.key)
 	var b []byte
 	err = session.Write(k, b)
-	c.Check(err, Not(Equals), nil)
-	c.Check(err, Not(Equals), syscall.ENOENT)
+	c.Check(err, Equals, ErrZeroWrite)
 
 	err = session.Write(k, []byte{})
-	c.Check(err, Not(Equals), nil)
-	c.Check(err, Not(Equals), syscall.ENOENT)
+	c.Check(err, Equals, ErrZeroWrite)
 }
 
 func (e *E) TestReadOffsets(c *C) {

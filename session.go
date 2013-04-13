@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	readOffset = unsafe.Sizeof(C.struct_dnet_io_attr{})
+	readOffset   = unsafe.Sizeof(C.struct_dnet_io_attr{})
+	ErrZeroWrite = fmt.Errorf("Attempt to write 0 bytes")
 )
 
 type Session struct {
@@ -75,7 +76,7 @@ func (s *Session) Read(key *Key, offset uint, size uint) (b []byte, err error) {
 func (s *Session) Write(key *Key, b []byte) (err error) {
 	l := C.uint64_t(len(b))
 	if l == 0 {
-		return fmt.Errorf("Attempt to write 0 bytes to %s", key)
+		return ErrZeroWrite
 	}
 
 	atomic.AddUint64(&cWrites, 1)
