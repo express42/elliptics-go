@@ -41,6 +41,9 @@ func (r *reader) Read(b []byte) (n int, err error) {
 	l := int(dataSize - uint64(readOffset))
 	header := reflect.SliceHeader{Data: uintptr(data) + readOffset, Len: l, Cap: l}
 	n = copy(b, *(*[]byte)(unsafe.Pointer(&header)))
+	if n < len(b) {
+		err = io.EOF
+	}
 
 	atomic.AddUint64(&r.offset, uint64(n))
 	return

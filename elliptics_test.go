@@ -162,7 +162,7 @@ func (e *E) TestReader(c *C) {
 	c.Check(buf[147:150], DeepEquals, []byte{157, 158, 159})
 
 	n, err = r.Read(buf)
-	c.Check(err, IsNil)
+	c.Check(err, Equals, io.EOF)
 	c.Check(n, Equals, 96)
 	c.Check(buf[0:3], DeepEquals, []byte{160, 161, 162})
 	c.Check(buf[93:96], DeepEquals, []byte{253, 254, 255})
