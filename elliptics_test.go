@@ -138,7 +138,7 @@ func (e *E) TestReadOffsets(c *C) {
 	c.Assert(data, IsNil)
 }
 
-func (e *E) TestReader(c *C) {
+func (e *E) TestReaderSeekRead(c *C) {
 	node := NewNode(timeout)
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1025)
@@ -152,8 +152,20 @@ func (e *E) TestReader(c *C) {
 	c.Assert(err, IsNil)
 	defer session.Remove(k)
 
-	r := session.Reader(k, 10)
+	r := session.Reader(k)
 	buf := make([]byte, 150)
+
+	s, err := r.Seek(50, 0)
+	c.Check(err, IsNil)
+	c.Check(s, Equals, int64(50))
+
+	s, err = r.Seek(5, 0)
+	c.Check(err, IsNil)
+	c.Check(s, Equals, int64(5))
+
+	s, err = r.Seek(5, 1)
+	c.Check(err, IsNil)
+	c.Check(s, Equals, int64(10))
 
 	n, err := r.Read(buf)
 	c.Check(err, IsNil)
