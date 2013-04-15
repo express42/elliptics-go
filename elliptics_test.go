@@ -5,6 +5,7 @@ package elliptics_test
 import (
 	. "."
 	"fmt"
+	"io"
 	. "launchpad.net/gocheck"
 	"syscall"
 	"time"
@@ -135,4 +136,38 @@ func (e *E) TestReadOffsets(c *C) {
 	data, err = session.Read(k, 256, 10)
 	c.Assert(err, Equals, syscall.E2BIG)
 	c.Assert(data, IsNil)
+}
+
+func (e *E) TestReader(c *C) {
+	node := NewNode(timeout)
+	defer node.Delete()
+	node.Connect("127.0.0.1", 1025)
+
+	session, err := node.NewSession([]uint32{1})
+	c.Assert(err, IsNil)
+	defer session.Delete()
+
+	k := NewKey(e.key)
+	err = session.Write(k, e.data)
+	c.Assert(err, IsNil)
+	defer session.Remove(k)
+
+	r := session.Reader(k, 10)
+	buf := make([]byte, 150)
+
+	n, err := r.Read(buf)
+	c.Check(err, IsNil)
+	c.Check(n, Equals, 150)
+	c.Check(buf[0:3], DeepEquals, []byte{10, 11, 12})
+	c.Check(buf[147:150], DeepEquals, []byte{157, 158, 159})
+
+	n, err = r.Read(buf)
+	c.Check(err, IsNil)
+	c.Check(n, Equals, 96)
+	c.Check(buf[0:3], DeepEquals, []byte{160, 161, 162})
+	c.Check(buf[93:96], DeepEquals, []byte{253, 254, 255})
+
+	n, err = r.Read(buf)
+	c.Check(err, Equals, io.EOF)
+	c.Check(n, Equals, 0)
 }

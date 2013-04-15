@@ -9,12 +9,14 @@ import "C"
 
 import (
 	"fmt"
+	"io"
 	"sync/atomic"
 	"unsafe"
 )
 
 var (
-	readOffset   = unsafe.Sizeof(C.struct_dnet_io_attr{})
+	readOffset = unsafe.Sizeof(C.struct_dnet_io_attr{})
+
 	ErrZeroWrite = fmt.Errorf("Attempt to write 0 bytes")
 )
 
@@ -47,8 +49,9 @@ func (s *Session) Delete() {
 	// runtime.UnlockOSThread()
 }
 
-// Read object from Elliptics by key. Session's groups are used (somehow), key's group is ignored.
-func (s *Session) Read(key *Key, offset uint, size uint) (b []byte, err error) {
+// Read object from Elliptics by key, offset and size. Session's groups are used (somehow), key's group is ignored.
+// data may be nil, otherwise it should be C.free'd by caller.
+func (s *Session) read(key *Key, offset uint64, size uint64) (data unsafe.Pointer, dataSize uint64, err error) {
 	atomic.AddUint64(&cReads, 1)
 
 	io_attr := C.struct_dnet_io_attr{
@@ -58,18 +61,29 @@ func (s *Session) Read(key *Key, offset uint, size uint) (b []byte, err error) {
 
 	var cflags C.uint64_t
 	var errp C.int
-	data := C.dnet_read_data_wait(s.session, &key.id, &io_attr, cflags, &errp)
-	if data != nil {
-		defer C.free(data)
-	}
+	data = C.dnet_read_data_wait(s.session, &key.id, &io_attr, cflags, &errp)
+	dataSize = uint64(io_attr.size)
 	if errp != 0 {
 		err = Error(errp)
+	}
+	return
+}
+
+// Read object from Elliptics by key, offset and size. Session's groups are used (somehow), key's group is ignored.
+func (s *Session) Read(key *Key, offset uint64, size uint64) (b []byte, err error) {
+	// TODO use reflect.SliceHeader and manage data ourselves?
+	data, dataSize, err := s.read(key, offset, size)
+	if data == nil {
 		return
 	}
+	defer C.free(data)
 
-	// TODO use reflect.SliceHeader and manage data ourselves?
-	b = C.GoBytes(unsafe.Pointer(uintptr(data)+readOffset), C.int(io_attr.size-C.uint64_t(readOffset)))
+	b = C.GoBytes(unsafe.Pointer(uintptr(data)+readOffset), C.int(dataSize)-C.int(readOffset))
 	return
+}
+
+func (s *Session) Reader(key *Key, offset uint64) io.Reader {
+	return &reader{session: s, key: key, offset: offset}
 }
 
 // Write object to Elliptics by key. len(b) must be > 0. Session's groups are used (somehow), key's group is ignored.
