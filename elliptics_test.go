@@ -152,12 +152,12 @@ func (e *E) TestReaderSeekRead(c *C) {
 	c.Assert(err, IsNil)
 	defer session.Remove(k)
 
-	r := session.Reader(k)
+	r := session.Reader(k, uint64(len(e.data)))
 	buf := make([]byte, 150)
 
-	s, err := r.Seek(50, 0)
+	s, err := r.Seek(0, 2)
 	c.Check(err, IsNil)
-	c.Check(s, Equals, int64(50))
+	c.Check(s, Equals, int64(256))
 
 	s, err = r.Seek(5, 0)
 	c.Check(err, IsNil)

@@ -8,7 +8,7 @@ package elliptics
 import "C"
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"reflect"
 	"sync/atomic"
@@ -26,6 +26,7 @@ type reader struct {
 	session *Session
 	key     *Key
 	offset  uint64
+	size    uint64
 }
 
 // check interface
@@ -65,12 +66,23 @@ func (r *reader) ReadAt(b []byte, offset int64) (n int, err error) {
 func (r *reader) Seek(offset int64, whence int) (ret int64, err error) {
 	switch whence {
 	case 0:
-		atomic.StoreUint64(&r.offset, uint64(offset))
 		ret = offset
+		atomic.StoreUint64(&r.offset, uint64(ret))
 	case 1:
 		ret = int64(atomic.AddUint64(&r.offset, uint64(offset)))
 	case 2:
-		err = errors.New("whence 2 is not supported yet")
+		ret = int64(r.size) - offset
+		atomic.StoreUint64(&r.offset, uint64(ret))
+	default:
+		err = fmt.Errorf("elliptics-go: invalid whence value %d", whence)
+	}
+
+	if ret < 0 {
+		err = fmt.Errorf("elliptics-go: seek resulted in negative offset %d", ret)
+		ret = 0
+	} else if uint64(ret) > r.size {
+		err = fmt.Errorf("elliptics-go: seek resulted in offset %d > size %d", ret, r.size)
+		ret = 0
 	}
 	return
 }

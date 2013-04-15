@@ -16,7 +16,7 @@ import (
 var (
 	readOffset = unsafe.Sizeof(C.struct_dnet_io_attr{})
 
-	ErrZeroWrite = errors.New("attempt to write 0 bytes")
+	ErrZeroWrite = errors.New("elliptics-go: attempt to write 0 bytes")
 )
 
 type Session struct {
@@ -81,8 +81,8 @@ func (s *Session) Read(key *Key, offset uint64, size uint64) (b []byte, err erro
 	return
 }
 
-func (s *Session) Reader(key *Key) ReadAtSeeker {
-	return &reader{session: s, key: key}
+func (s *Session) Reader(key *Key, size uint64) ReadAtSeeker {
+	return &reader{session: s, key: key, size: size}
 }
 
 // Write object to Elliptics by key. len(b) must be > 0. Session's groups are used (somehow), key's group is ignored.
