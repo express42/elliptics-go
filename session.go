@@ -81,7 +81,7 @@ func (s *Session) Read(key *Key, offset uint64, size uint64) (b []byte, err erro
 	return
 }
 
-func (s *Session) Reader(key *Key, size uint64) ReadAtSeeker {
+func (s *Session) Reader(key *Key, size uint64) ReadSeekCloser {
 	return &reader{session: s, key: key, size: size}
 }
 

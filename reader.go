@@ -16,7 +16,8 @@ import (
 	"unsafe"
 )
 
-type ReadAtSeeker interface {
+type ReadSeekCloser interface {
+	io.Closer
 	io.Reader
 	io.ReaderAt
 	io.Seeker
@@ -29,12 +30,9 @@ type reader struct {
 	size    uint64
 }
 
-// check interface
-var (
-	_ io.Reader   = &reader{}
-	_ io.ReaderAt = &reader{}
-	_ io.Seeker   = &reader{}
-)
+func (r *reader) Close() (err error) {
+	return
+}
 
 func (r *reader) Read(b []byte) (n int, err error) {
 	offset := atomic.LoadUint64(&r.offset)

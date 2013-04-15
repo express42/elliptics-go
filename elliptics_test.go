@@ -154,6 +154,9 @@ func (e *E) TestReaderSeekRead(c *C) {
 
 	r := session.Reader(k, uint64(len(e.data)))
 	buf := make([]byte, 150)
+	defer func() {
+		c.Check(r.Close(), IsNil)
+	}()
 
 	s, err := r.Seek(0, 2)
 	c.Check(err, IsNil)
