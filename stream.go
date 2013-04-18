@@ -16,32 +16,34 @@ import (
 	"unsafe"
 )
 
-type ReadSeekCloser interface {
+type Streamer interface {
 	io.Closer
 	io.Reader
 	io.ReaderAt
+	io.Writer
+	io.WriterAt
 	io.Seeker
 }
 
-type reader struct {
+type streamer struct {
 	session *Session
 	key     *Key
 	offset  uint64
 	size    uint64
 }
 
-func (r *reader) Close() (err error) {
+func (r *streamer) Close() (err error) {
 	return
 }
 
-func (r *reader) Read(b []byte) (n int, err error) {
+func (r *streamer) Read(b []byte) (n int, err error) {
 	offset := atomic.LoadUint64(&r.offset)
 	n, err = r.ReadAt(b, int64(offset))
 	atomic.AddUint64(&r.offset, uint64(n))
 	return
 }
 
-func (r *reader) ReadAt(b []byte, offset int64) (n int, err error) {
+func (r *streamer) ReadAt(b []byte, offset int64) (n int, err error) {
 	data, dataSize, err := r.session.read(r.key, uint64(offset), uint64(len(b)))
 	if err == syscall.E2BIG {
 		err = io.EOF
@@ -61,7 +63,18 @@ func (r *reader) ReadAt(b []byte, offset int64) (n int, err error) {
 	return
 }
 
-func (r *reader) Seek(offset int64, whence int) (ret int64, err error) {
+func (r *streamer) Write(p []byte) (n int, err error) {
+	offset := atomic.LoadUint64(&r.offset)
+	n, err = r.WriteAt(b, int64(offset))
+	atomic.AddUint64(&r.offset, uint64(n))
+	return
+}
+
+func (r *streamer) WriteAt(p []byte, off int64) (n int, err error) {
+	return
+}
+
+func (r *streamer) Seek(offset int64, whence int) (ret int64, err error) {
 	switch whence {
 	case 0:
 		ret = offset

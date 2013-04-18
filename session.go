@@ -81,12 +81,12 @@ func (s *Session) Read(key *Key, offset uint64, size uint64) (b []byte, err erro
 	return
 }
 
-func (s *Session) Reader(key *Key, size uint64) ReadSeekCloser {
-	return &reader{session: s, key: key, size: size}
+func (s *Session) Streamer(key *Key, size uint64) Streamer {
+	return &streamer{session: s, key: key, size: size}
 }
 
 // Write object to Elliptics by key. len(b) must be > 0. Session's groups are used (somehow), key's group is ignored.
-func (s *Session) Write(key *Key, b []byte) (err error) {
+func (s *Session) Write(key *Key, offset uint64, b []byte) (err error) {
 	l := C.uint64_t(len(b))
 	if l == 0 {
 		return ErrZeroWrite
@@ -94,7 +94,10 @@ func (s *Session) Write(key *Key, b []byte) (err error) {
 
 	atomic.AddUint64(&cWrites, 1)
 
-	io_attr := C.struct_dnet_io_attr{parent: key.id.id, id: key.id.id, _type: key.id._type, size: l}
+	io_attr := C.struct_dnet_io_attr{
+		parent: key.id.id, id: key.id.id, _type: key.id._type,
+		offset: C.uint64_t(offset), size: l,
+	}
 	io_control := C.struct_dnet_io_control{id: key.id, io: io_attr, data: unsafe.Pointer(&b[0]), fd: -1}
 
 	var result unsafe.Pointer

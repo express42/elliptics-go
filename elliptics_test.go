@@ -43,7 +43,7 @@ func (e *E) TestReadWriteRemove(c *C) {
 	defer session.Delete()
 
 	k := NewKey(e.key)
-	err = session.Write(k, e.data)
+	err = session.Write(k, 0, e.data)
 	c.Assert(err, IsNil)
 
 	data12, err := session.Read(k, 0, 0)
@@ -70,7 +70,7 @@ func (e *E) TestBadConnect(c *C) {
 	defer session.Delete()
 
 	k := NewKey(e.key)
-	err = session.Write(k, e.data)
+	err = session.Write(k, 0, e.data)
 	c.Assert(err, Equals, syscall.ENOENT)
 
 	data1, err := session.Read(k, 0, 0)
@@ -92,10 +92,10 @@ func (e *E) TestWriteEmpty(c *C) {
 
 	k := NewKey(e.key)
 	var b []byte
-	err = session.Write(k, b)
+	err = session.Write(k, 0, b)
 	c.Check(err, Equals, ErrZeroWrite)
 
-	err = session.Write(k, []byte{})
+	err = session.Write(k, 0, []byte{})
 	c.Check(err, Equals, ErrZeroWrite)
 }
 
@@ -109,7 +109,7 @@ func (e *E) TestReadOffsets(c *C) {
 	defer session.Delete()
 
 	k := NewKey(e.key)
-	err = session.Write(k, e.data)
+	err = session.Write(k, 0, e.data)
 	c.Assert(err, IsNil)
 	defer session.Remove(k)
 
@@ -138,7 +138,7 @@ func (e *E) TestReadOffsets(c *C) {
 	c.Assert(data, IsNil)
 }
 
-func (e *E) TestReaderSeekRead(c *C) {
+func (e *E) TestStreamer(c *C) {
 	node := NewNode(timeout)
 	defer node.Delete()
 	node.Connect("127.0.0.1", 1025)
@@ -148,11 +148,11 @@ func (e *E) TestReaderSeekRead(c *C) {
 	defer session.Delete()
 
 	k := NewKey(e.key)
-	err = session.Write(k, e.data)
+	err = session.Write(k, 0, e.data)
 	c.Assert(err, IsNil)
 	defer session.Remove(k)
 
-	r := session.Reader(k, uint64(len(e.data)))
+	r := session.Streamer(k, uint64(len(e.data)))
 	buf := make([]byte, 150)
 	defer func() {
 		c.Check(r.Close(), IsNil)
