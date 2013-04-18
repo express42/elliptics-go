@@ -148,41 +148,58 @@ func (e *E) TestStreamer(c *C) {
 	defer session.Delete()
 
 	k := NewKey(e.key)
-	err = session.Write(k, 0, e.data)
-	c.Assert(err, IsNil)
 	defer session.Remove(k)
 
-	r := session.Streamer(k, uint64(len(e.data)))
-	buf := make([]byte, 150)
+	s := session.Streamer(k, 12)
 	defer func() {
-		c.Check(r.Close(), IsNil)
+		c.Check(s.Close(), IsNil)
 	}()
 
-	s, err := r.Seek(0, 2)
+	p, err := s.Seek(3, 0)
 	c.Check(err, IsNil)
-	c.Check(s, Equals, int64(256))
+	c.Check(p, Equals, int64(3))
 
-	s, err = r.Seek(5, 0)
+	n, err := s.Write(e.data[3:4])
 	c.Check(err, IsNil)
-	c.Check(s, Equals, int64(5))
+	c.Check(n, Equals, 1)
 
-	s, err = r.Seek(5, 1)
+	n, err = s.WriteAt(e.data[9:12], 9)
 	c.Check(err, IsNil)
-	c.Check(s, Equals, int64(10))
+	c.Check(n, Equals, 3)
 
-	n, err := r.Read(buf)
+	n, err = s.Write(e.data[4:6])
 	c.Check(err, IsNil)
-	c.Check(n, Equals, 150)
-	c.Check(buf[0:3], DeepEquals, []byte{10, 11, 12})
-	c.Check(buf[147:150], DeepEquals, []byte{157, 158, 159})
+	c.Check(n, Equals, 2)
 
-	n, err = r.Read(buf)
+	p, err = s.Seek(0, 0)
+	c.Check(err, IsNil)
+	c.Check(p, Equals, int64(0))
+
+	buf := make([]byte, 12)
+	n, err = s.Read(buf)
+	c.Check(err, IsNil)
+	c.Check(n, Equals, 12)
+	c.Check(buf[:n], DeepEquals, []byte{0x0, 0x0, 0x0, 0x3, 0x4, 0x5, 0x0, 0x0, 0x0, 0x9, 0xa, 0xb})
+
+	p, err = s.Seek(-6, 2)
+	c.Check(err, IsNil)
+	c.Check(p, Equals, int64(6))
+
+	n, err = s.Read(buf)
 	c.Check(err, Equals, io.EOF)
-	c.Check(n, Equals, 96)
-	c.Check(buf[0:3], DeepEquals, []byte{160, 161, 162})
-	c.Check(buf[93:96], DeepEquals, []byte{253, 254, 255})
+	c.Check(n, Equals, 6)
+	c.Check(buf[:n], DeepEquals, []byte{0x0, 0x0, 0x0, 0x9, 0xa, 0xb})
 
-	n, err = r.Read(buf)
+	n, err = s.ReadAt(buf, 9)
+	c.Check(err, Equals, io.EOF)
+	c.Check(n, Equals, 3)
+	c.Check(buf[:n], DeepEquals, []byte{0x9, 0xa, 0xb})
+
+	n, err = s.ReadAt(buf, 100500)
+	c.Check(err, Equals, io.EOF)
+	c.Check(n, Equals, 0)
+
+	n, err = s.Read(buf)
 	c.Check(err, Equals, io.EOF)
 	c.Check(n, Equals, 0)
 }
